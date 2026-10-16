@@ -72,7 +72,18 @@ jobs:
           exit $result
 
       - name: Build installer and portable executable
-        run: npm run package:win
+        shell: pwsh
+        run: |
+          cmd /c "npm run package:win > windows-package.log 2>&1"
+          $result = $LASTEXITCODE
+          Get-Content -LiteralPath windows-package.log
+          if ($result -ne 0) {
+            $diagnostic = Get-Content -LiteralPath windows-package.log -Raw
+            if ($diagnostic.Length -gt 10000) { $diagnostic = $diagnostic.Substring($diagnostic.Length - 10000) }
+            $diagnostic = $diagnostic.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Host "::error title=Windows packaging failed::$diagnostic"
+          }
+          exit $result
 
       - name: Verify executables and generate SHA-256 checksums
         shell: pwsh
