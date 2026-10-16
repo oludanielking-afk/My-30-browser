@@ -20,7 +20,7 @@ These are unsigned builds. Windows may display an unknown-publisher/SmartScreen 
 - At least 120 seconds between attempts per profile, including manual reloads; at least 30 seconds between manager-triggered reloads of the same website origin across profiles.
 - Reload applies only to the original managed tab at the exact configured URL. Navigation to another URL or focus in an input, textarea, select or editable element skips that attempt. This is not a general unsaved-form detector.
 - HTTP 429/503 immediately pauses automatic reload; three consecutive reload errors also pause it. Resume is explicit. Server-requested backoff is never bypassed by the scheduler. These limits cover manager-triggered top-level reloads, not website subrequests, manual user activity or initial browser navigation.
-- Geolocation is explicitly denied using Chromium's permission policy. This does not mask IP location. Browsers are visible, downloads are disabled, and no stealth, CAPTCHA bypass, fingerprint spoofing or security-evasion features are included.
+- Geolocation is blocked by the profile's native Chromium preference and explicitly denied through CDP. Existing geolocation grants are changed to deny; unrelated browser preferences are preserved. This does not mask IP location. Browsers are visible, downloads are disabled, and no stealth, CAPTCHA bypass, fingerprint spoofing or security-evasion features are included.
 - Timers stop when browsers close. A crashed tab is shown as an error and can be closed and reopened. Unexpected browser closure leaves data in place; restart that profile manually. Restarting the application does not automatically reopen sites.
 
 ## Local storage and security

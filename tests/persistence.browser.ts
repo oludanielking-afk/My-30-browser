@@ -59,6 +59,20 @@ test("Chromium cookies, storage and geolocation isolate and survive restart", as
       ),
       "denied",
     );
+    assert.equal(
+      await a.page!.evaluate(
+        () =>
+          new Promise<number>((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              () => resolve(0),
+              (error) => resolve(error.code),
+              { timeout: 5000 },
+            );
+          }),
+      ),
+      1,
+      "Geolocation requests must be denied",
+    );
     await manager.action("profile-01", "stop");
     await manager.action("profile-01", "start");
     const restored = manager.live.get("profile-01")!;

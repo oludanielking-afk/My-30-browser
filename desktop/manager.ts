@@ -3,6 +3,7 @@ import path from "node:path";
 import os from "node:os";
 import { existsSync } from "node:fs";
 import { Store } from "./store";
+import { denyGeolocation } from "./permissions";
 import type { Action, Profile, ProfileView, Snapshot } from "./types";
 export const randomDelay = (min: number, max: number, r = Math.random()) =>
   Math.floor((min + r * (max - min)) * 1000);
@@ -181,23 +182,22 @@ export class Manager {
     this.live.set(p.id, s);
     this.status.set(p.id, { state: "starting" });
     try {
-      s.context = await chromium.launchPersistentContext(
-        path.join(this.store.root, "profiles", p.id),
-        {
-          headless: this.options.headless ?? false,
-          executablePath: this.options.executablePath,
-          channel:
-            process.platform === "win32" &&
-            !this.options.executablePath &&
-            !existsSync(chromium.executablePath())
-              ? "msedge"
-              : undefined,
-          permissions: [],
-          acceptDownloads: false,
-          viewport: null,
-          args: ["--disable-background-mode"],
-        },
-      );
+      const directory = path.join(this.store.root, "profiles", p.id);
+      await denyGeolocation(directory);
+      s.context = await chromium.launchPersistentContext(directory, {
+        headless: this.options.headless ?? false,
+        executablePath: this.options.executablePath,
+        channel:
+          process.platform === "win32" &&
+          !this.options.executablePath &&
+          !existsSync(chromium.executablePath())
+            ? "msedge"
+            : undefined,
+        permissions: [],
+        acceptDownloads: false,
+        viewport: null,
+        args: ["--disable-background-mode"],
+      });
       const cdp = await s.context.newCDPSession(
         s.context.pages()[0] || (await s.context.newPage()),
       );
