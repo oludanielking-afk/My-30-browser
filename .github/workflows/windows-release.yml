@@ -51,6 +51,12 @@ jobs:
           '```text' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
           Get-Content -LiteralPath browser-test.log | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
           '```' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          if ($result -ne 0) {
+            $diagnostic = (Get-Content -LiteralPath browser-test.log -Raw)
+            if ($diagnostic.Length -gt 6000) { $diagnostic = $diagnostic.Substring($diagnostic.Length - 6000) }
+            $diagnostic = $diagnostic.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Host "::error title=Browser fixture test failed::$diagnostic"
+          }
           exit $result
 
       - name: Test Electron startup
