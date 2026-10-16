@@ -10,7 +10,7 @@ test("Chromium cookies, storage and geolocation isolate and survive restart", as
   const store = new Store(root);
   await store.init();
   const manager = new Manager(store, {
-    headless: !process.env.DISPLAY,
+    headless: process.platform !== "win32" && !process.env.DISPLAY,
     executablePath: process.env.TEST_CHROMIUM,
     minFreeMB: 0,
     prepareContext: async (context) => {
@@ -54,13 +54,6 @@ test("Chromium cookies, storage and geolocation isolate and survive restart", as
     );
     assert.equal(
       await a.page!.evaluate(
-        async () =>
-          (await navigator.permissions.query({ name: "geolocation" })).state,
-      ),
-      "denied",
-    );
-    assert.equal(
-      await a.page!.evaluate(
         () =>
           new Promise<number>((resolve) => {
             navigator.geolocation.getCurrentPosition(
@@ -72,6 +65,13 @@ test("Chromium cookies, storage and geolocation isolate and survive restart", as
       ),
       1,
       "Geolocation requests must be denied",
+    );
+    assert.equal(
+      await a.page!.evaluate(
+        async () =>
+          (await navigator.permissions.query({ name: "geolocation" })).state,
+      ),
+      "denied",
     );
     await manager.action("profile-01", "stop");
     await manager.action("profile-01", "start");

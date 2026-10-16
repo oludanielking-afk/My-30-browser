@@ -196,7 +196,7 @@ export class Manager {
         permissions: [],
         acceptDownloads: false,
         viewport: null,
-        args: ["--disable-background-mode"],
+        args: ["--disable-background-mode", "--deny-permission-prompts"],
       });
       const cdp = await s.context.newCDPSession(
         s.context.pages()[0] || (await s.context.newPage()),
@@ -204,6 +204,12 @@ export class Manager {
       await cdp.send("Browser.setPermission", {
         permission: { name: "geolocation" },
         setting: "denied",
+      });
+      await cdp.send("Browser.setPermission", {
+        permission: { name: "geolocation" },
+        setting: "denied",
+        origin: new URL(p.url).origin,
+        embeddedOrigin: new URL(p.url).origin,
       });
       await cdp.detach();
       await this.options.prepareContext?.(s.context);
