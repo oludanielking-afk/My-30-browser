@@ -42,10 +42,28 @@ jobs:
         run: npm test
 
       - name: Test browser persistence and session isolation
-        run: npm run test:browser
+        shell: pwsh
+        run: |
+          cmd /c "npm run test:browser > browser-test.log 2>&1"
+          $result = $LASTEXITCODE
+          Get-Content -LiteralPath browser-test.log
+          '### Browser persistence test' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          '```text' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Get-Content -LiteralPath browser-test.log | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          '```' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          exit $result
 
       - name: Test Electron startup
-        run: npm run test:startup
+        shell: pwsh
+        run: |
+          cmd /c "npm run test:startup > startup-test.log 2>&1"
+          $result = $LASTEXITCODE
+          Get-Content -LiteralPath startup-test.log
+          '### Electron startup test' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          '```text' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          Get-Content -LiteralPath startup-test.log | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          '```' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          exit $result
 
       - name: Build installer and portable executable
         run: npm run package:win
