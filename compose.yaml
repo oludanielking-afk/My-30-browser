@@ -1,0 +1,18 @@
+services:
+  account-manager:
+    build: .
+    init: true
+    shm_size: 2gb
+    environment:
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
+      MAX_ACTIVE: ${MAX_ACTIVE:-5}
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data
+    ports:
+      - '127.0.0.1:3000:3000'
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true

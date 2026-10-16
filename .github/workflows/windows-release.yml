@@ -1,0 +1,92 @@
+name: Build Windows application
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    name: Test and package Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install chromium
+
+      - name: Build and type-check
+        run: npm run build
+
+      - name: Test settings, reload scheduling and worker API
+        run: npm test
+
+      - name: Test browser persistence and session isolation
+        run: npm run test:browser
+
+      - name: Test Electron startup
+        run: npm run test:startup
+
+      - name: Build installer and portable executable
+        run: npm run package:win
+
+      - name: Verify executables and generate SHA-256 checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $files = @(
+            "MultiBrowserManager-$version-Setup-x64.exe",
+            "MultiBrowserManager-$version-Portable-x64.exe"
+          )
+          $lines = foreach ($name in $files) {
+            $path = Join-Path 'release' $name
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Missing build output: $name"
+            }
+            if ((Get-Item -LiteralPath $path).Length -lt 1MB) {
+              throw "Build output is unexpectedly small: $name"
+            }
+            $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $name"
+          }
+          $lines | Set-Content -LiteralPath 'release/SHA256SUMS.txt' -Encoding utf8
+          $lines | ForEach-Object { Write-Host $_ }
+          @"
+          ## Windows downloads
+          Open this run's **Artifacts** section and download **MultiBrowserManager-Windows-x64**.
+          The ZIP contains both executables and SHA256SUMS.txt.
+          These unsigned builds use installed Microsoft Edge (Chromium) on Windows 10/11 x64.
+          "@ | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload Windows executables and checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: MultiBrowserManager-Windows-x64
+          path: |
+            release/MultiBrowserManager-*-Setup-x64.exe
+            release/MultiBrowserManager-*-Portable-x64.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

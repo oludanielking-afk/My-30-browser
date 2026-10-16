@@ -1,0 +1,95 @@
+:root {
+  font:
+    15px system-ui,
+    sans-serif;
+  color: #e7eef7;
+  background: #0b1220;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  max-width: 1160px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+h1 {
+  font-size: 26px;
+}
+h2 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+.top,
+.summary {
+  background: #172338;
+  border: 1px solid #2b3c54;
+  border-radius: 12px;
+  padding: 18px;
+  margin: 18px 0;
+}
+input {
+  width: 100%;
+  border: 1px solid #41526d;
+  background: #101a2b;
+  color: inherit;
+  padding: 10px;
+  border-radius: 7px;
+}
+button {
+  background: #376bba;
+  color: white;
+  border: 0;
+  padding: 9px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+}
+.card {
+  background: #172338;
+  border: 1px solid #2b3c54;
+  border-radius: 12px;
+  padding: 16px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 9px 0;
+}
+.row > input {
+  flex: 1;
+  min-width: 155px;
+}
+.status {
+  font-size: 12px;
+  color: #a8c5ed;
+}
+.note {
+  color: #ffcf85;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.small {
+  font-size: 12px;
+  color: #a4b5ca;
+}
+label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+label input {
+  width: auto;
+}
+#error {
+  color: #ffab9f;
+}

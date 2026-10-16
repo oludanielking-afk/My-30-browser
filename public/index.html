@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Browser Account Manager</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <h1>Multi-Browser Account Manager</h1>
+    <p class="small">
+      30 persistent Chromium profiles · Headed on cloud virtual display ·
+      Location permission denied · Random reload: 120–300 seconds
+    </p>
+    <section class="top">
+      <h2>Dashboard access</h2>
+      <div class="row">
+        <input
+          id="token"
+          type="password"
+          autocomplete="off"
+          placeholder="Paste ADMIN_TOKEN"
+        /><button id="connect">Connect</button>
+      </div>
+      <div id="error" role="alert"></div>
+    </section>
+    <section class="summary">
+      <strong id="summary">Not connected</strong>
+      <p class="small">
+        Cloud browsers run on a virtual display. To interact with logins,
+        configure a private remote desktop access path separately.
+      </p>
+    </section>
+    <main id="cards" class="grid"></main>
+    <script src="/app.js"></script>
+  </body>
+</html>

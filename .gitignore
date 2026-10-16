@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+windows-browsers/
+data/
+.env
+*.log
+build/uninstall-files.nsh
