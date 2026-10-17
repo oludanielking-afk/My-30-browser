@@ -1,11 +1,11 @@
 {
   "status": "running-not-completed",
-  "checkedAt": "2026-10-17T00:23:01.311289+00:00",
-  "checkedAtLagos": "2026-10-17T01:23:01.311289+01:00",
+  "checkedAt": "2026-10-17T00:42:24.046946+00:00",
+  "checkedAtLagos": "2026-10-17T01:42:24.046946+01:00",
   "pid": 243292,
   "requestedSeconds": 86400,
-  "elapsedSecondsAtCheck": 50.04,
-  "samplesAtCheck": 6,
+  "elapsedSecondsAtCheck": 1210.832,
+  "samplesAtCheck": 122,
   "failedSamplesAtCheck": 0,
   "runningProfileMinimumAtCheck": 30,
   "reportDirectory": "reports/endurance-20261017-gapguard",
@@ -13,5 +13,7 @@
   "completed24HourPass": false,
   "samplingPolicy": "Reject gaps above 30 seconds or fewer than 95% of expected ten-second samples",
   "previousTrial": "Stopped after 510 seconds, incomplete, to restart with explicit gap/suspension rejection",
-  "lifetimeWarning": "Ephemeral workspace can suspend or expire; require a complete final summary and integration result."
+  "lifetimeWarning": "Ephemeral workspace can suspend or expire; require a complete final summary and integration result.",
+  "lastHeartbeatAtCheck": "2026-10-17T00:42:19.697Z",
+  "maximumObservationGapMsAtCheck": 10016
 }
