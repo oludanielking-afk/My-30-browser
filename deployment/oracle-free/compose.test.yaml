@@ -1,0 +1,8 @@
+# Disposable controlled-fixture deployment only. Never combine with real account data.
+services:
+  manager:
+    environment:
+      NODE_ENV: test
+      MBAM_TEST_MODE: "1"
+    cpus: 2
+    mem_limit: 6g

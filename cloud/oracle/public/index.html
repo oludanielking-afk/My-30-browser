@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Multi-Browser • Oracle pilot</title
+  ><link rel="stylesheet" href="/style.css" />
+  <header>
+    <div>
+      <small>MULTI-BROWSER MANAGER</small>
+      <h1>Oracle cloud pilot</h1>
+    </div>
+    <form id="login">
+      <input
+        id="token"
+        type="password"
+        placeholder="Management token"
+        autocomplete="off"
+        aria-label="Management token"
+      /><button>Connect</button>
+    </form>
+    <button id="disconnect">Disconnect</button>
+  </header>
+  <main>
+    <p id="message" role="status">
+      Connect using your private management token.
+    </p>
+    <section id="overview"></section>
+    <p id="capacity"></p>
+    <button id="viewer">Open secure browser viewer</button
+    ><a id="viewer-link" hidden target="_blank" rel="noopener"
+      >View browsers (15-minute session)</a
+    >
+    <p class="muted">
+      Authentication status is unknown. Verify logins manually in the private
+      viewer. Owner acknowledgement does not establish a website's permission
+      for automation.
+    </p>
+    <section id="profiles"></section>
+    <h2>Recent operations</h2>
+    <pre id="events"></pre>
+  </main>
+  <script src="/app.js" defer></script>
+</html>

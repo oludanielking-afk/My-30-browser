@@ -1,0 +1,89 @@
+name: Oracle ARM64 pilot validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [free-tier-arm64]
+    paths:
+      [
+        "cloud/**",
+        "desktop/**",
+        "deployment/oracle-free/**",
+        "tools/**",
+        "tests/**",
+        "scripts/**",
+        "package*.json",
+        ".github/workflows/oracle-arm64.yml",
+      ]
+permissions:
+  contents: read
+jobs:
+  arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      COMPOSE_FILE: deployment/oracle-free/compose.yaml:deployment/oracle-free/compose.test.yaml
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm test
+      - name: Confirm native ARM runner
+        run: test "$(uname -m)" = aarch64
+      - name: Create disposable fixture secrets (no Oracle account assertion)
+        run: |
+          node -e "const fs=require('fs'),c=require('crypto'),p='deployment/oracle-free/.secrets/';fs.mkdirSync(p,{recursive:true,mode:0o700});for(const n of ['admin-token','vault-key'])fs.writeFileSync(p+n,c.randomBytes(32).toString('hex'),{mode:0o444})"
+          docker compose config --quiet
+      - run: docker compose build
+      - run: docker compose up -d
+      - name: Docker headed browser, security, reload and authenticated RFB tests
+        run: |
+          docker compose exec -T -e BASE_URL=http://127.0.0.1:3000 -e REQUIRE_VIEWER=1 -e REPORT_DIR=/reports/integration manager node tools/oracle-integration.mjs
+      - name: Controlled container restart preserves desired session
+        run: |
+          docker compose exec -T manager node tools/oracle-restart.mjs prepare
+          docker compose restart manager
+          docker compose exec -T manager node tools/oracle-restart.mjs verify
+      - name: Resource capacity probe (native runner, not Oracle performance)
+        run: |
+          docker compose stop
+          docker compose run --rm -e PROBE_MAX=2 -e STEP_SECONDS=30 -e REPORT_DIR=/reports/capacity manager probe
+      - name: Export safe reports
+        if: always()
+        run: |
+          mkdir -p reports/oracle-free/ci
+          docker compose create
+          id=$(docker compose ps -aq manager)
+          docker cp "$id:/reports/." reports/oracle-free/ci/ || true
+          find reports/oracle-free/ci -type d -name private -prune -exec rm -rf {} +
+      - name: Shut down fixture deployment
+        if: always()
+        run: docker compose down
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oracle-native-arm64-validation
+          path: |
+            reports/oracle-free/ci/**/integration.json
+            reports/oracle-free/ci/**/failure.json
+            reports/oracle-free/ci/**/capacity-results.json
+            reports/oracle-free/ci/**/capacity-results.csv
+            reports/oracle-free/ci/**/restart.json
+          if-no-files-found: warn
+  windows-compatibility:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install chromium
+      - run: npm run test:browser
+      - run: npm run test:startup

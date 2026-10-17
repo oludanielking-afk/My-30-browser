@@ -36,3 +36,6 @@ for (const name of ["worker", "coordinator", "verify", "load"])
     outfile: `dist/cloud-${name}.cjs`,
     external: ["express", "playwright"],
   });
+
+for (const name of ["server", "probe"])
+  await build({entryPoints:[`cloud/oracle/${name}.ts`],bundle:true,platform:"node",format:"cjs",outfile:`dist/oracle-${name}.cjs`,external:["express","playwright"]});

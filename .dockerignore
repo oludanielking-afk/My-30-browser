@@ -7,3 +7,6 @@ data
 
 deployment/.secrets
 reports
+
+**/.secrets
+deployment/oracle-free/.env

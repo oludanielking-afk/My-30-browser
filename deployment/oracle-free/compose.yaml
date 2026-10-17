@@ -1,0 +1,38 @@
+name: multibrowser-oracle-free
+services:
+  manager:
+    build:
+      context: ../..
+      dockerfile: deployment/oracle-free/Dockerfile
+    image: multibrowser-oracle-free:local
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 120s
+    ports: ["127.0.0.1:3000:3000"]
+    cpus: ${CPU_LIMIT:-3}
+    mem_limit: ${MEMORY_LIMIT:-18g}
+    pids_limit: 1024
+    shm_size: 1g
+    read_only: true
+    tmpfs: ["/tmp:size=512m,mode=1777"]
+    security_opt: ["no-new-privileges:true", "seccomp=./seccomp.json"]
+    environment:
+      ADMIN_TOKEN_FILE: /run/secrets/admin-token
+      VAULT_KEY_FILE: /run/secrets/vault-key
+      MAX_ACTIVE: ${MAX_ACTIVE:-3}
+      MEMORY_RESERVE_MB: ${MEMORY_RESERVE_MB:-1536}
+      BROWSER_BUDGET_MB: ${BROWSER_BUDGET_MB:-1024}
+      DISK_RESERVE_MB: ${DISK_RESERVE_MB:-2048}
+      CPU_CEILING_PERCENT: ${CPU_CEILING_PERCENT:-85}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+    volumes: ["profiles:/data", "reports:/reports"]
+    secrets: [admin-token, vault-key]
+    logging:
+      driver: json-file
+      options: {max-size: "5m", max-file: "3"}
+volumes:
+  profiles:
+  reports:
+secrets:
+  admin-token: {file: ./.secrets/admin-token}
+  vault-key: {file: ./.secrets/vault-key}

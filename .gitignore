@@ -11,3 +11,9 @@ deployment/.secrets/
 reports/local-*/
 reports/endurance-*/
 reports/**/private/
+
+deployment/oracle-free/.secrets/
+deployment/oracle-free/.env
+reports/oracle-free/runtime/
+reports/oracle-free/soak-test/
+reports/oracle-free/*-samples.jsonl

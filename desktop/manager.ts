@@ -42,6 +42,11 @@ export class Manager {
       beforeReload?: (origin: string) => Promise<boolean>;
       onIncident?: (id: string, kind: string) => void;
       prepareContext?: (context: BrowserContext) => Promise<void>;
+      beforeStart?: (id: string) => Promise<void>;
+      onLaunch?: (id: string) => void;
+      onReload?: (id: string, time: number, ok: boolean) => void;
+      exponentialReloadBackoff?: boolean;
+      chromiumSandbox?: boolean;
     } = {},
   ) {}
   snapshot(): Snapshot {
@@ -108,7 +113,12 @@ export class Manager {
   schedule(p: Profile, s: Session) {
     this.clear(s);
     if (!p.autoReload || s.paused || s.stopping) return;
-    s.next = Date.now() + randomDelay(p.minSeconds, p.maxSeconds);
+    const delay = randomDelay(p.minSeconds, p.maxSeconds);
+    s.next =
+      Date.now() +
+      (this.options.exponentialReloadBackoff && s.failures
+        ? Math.max(delay, Math.min(3600000, 120000 * 2 ** s.failures))
+        : delay);
     s.timer = setTimeout(() => {
       void this.exclusive(async () => {
         if (this.live.get(p.id) !== s || s.stopping) return;
@@ -146,6 +156,7 @@ export class Manager {
     s.busy = true;
     s.last = now;
     this.originLast.set(origin, now);
+    let ok = false;
     try {
       const response = await s.page.reload({
         waitUntil: "domcontentloaded",
@@ -158,6 +169,7 @@ export class Manager {
         );
       }
       s.failures = 0;
+      ok = true;
       this.status.set(p.id, { state: "running", lastReload: now });
     } catch (e) {
       s.failures++;
@@ -165,10 +177,12 @@ export class Manager {
       throw e;
     } finally {
       s.busy = false;
+      this.options.onReload?.(p.id, now, ok);
     }
   }
   async start(p: Profile) {
     if (this.live.has(p.id)) throw Error("Profile already open");
+    await this.options.beforeStart?.(p.id);
     if (this.live.size >= this.store.maxActive)
       throw Error(`Active browser limit (${this.store.maxActive}) reached`);
     if (
@@ -191,6 +205,7 @@ export class Manager {
       await denyGeolocation(directory);
       s.context = await chromium.launchPersistentContext(directory, {
         headless: this.options.headless ?? false,
+        chromiumSandbox: this.options.chromiumSandbox,
         executablePath: this.options.executablePath,
         channel:
           process.platform === "win32" &&
@@ -269,6 +284,7 @@ export class Manager {
       }, 30000);
       s.busy = false;
       this.status.set(p.id, { state: "running" });
+      this.options.onLaunch?.(p.id);
       this.schedule(p, s);
     } catch (e: any) {
       s.stopping = true;

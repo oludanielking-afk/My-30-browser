@@ -1,0 +1,83 @@
+:root {
+  font: 15px system-ui;
+  color: #e6edf5;
+  background: #0d1420;
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 24px;
+  background: #152235;
+}
+h1 {
+  margin: 4px 0;
+  font-size: 26px;
+}
+small,
+.muted {
+  color: #9aacbf;
+}
+main {
+  max-width: 1400px;
+  margin: auto;
+  padding: 24px;
+}
+button,
+input {
+  font: inherit;
+  border: 1px solid #3b526f;
+  border-radius: 6px;
+  padding: 9px;
+  background: #192b42;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  background: #234c74;
+  margin: 4px;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+a {
+  color: #8cceff;
+}
+#overview,
+#profiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+article {
+  padding: 18px;
+  background: #152235;
+  border: 1px solid #293b52;
+  border-radius: 12px;
+}
+label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0;
+}
+label input:not([type="checkbox"]) {
+  width: 58%;
+  min-width: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+#screen {
+  height: 85vh;
+}
+#message {
+  color: #a7d6ff;
+}
