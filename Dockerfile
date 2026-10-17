@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci --no-audit --no-fund
 COPY desktop ./desktop
+COPY cloud ./cloud
 COPY renderer ./renderer
 COPY scripts ./scripts
 COPY tsconfig.json vite.config.ts ./

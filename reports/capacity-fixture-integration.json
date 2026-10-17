@@ -1,0 +1,18 @@
+{
+  "completed": true,
+  "auth": true,
+  "shardOwnership": true,
+  "duplicateLock": true,
+  "isolatedProfiles": 30,
+  "capacitySeconds": 180,
+  "functionalProbes": true,
+  "tabCrashRecovery": true,
+  "workerKillRecovery": true,
+  "restartSessionPersistence": true,
+  "host": {
+    "cpuQuota": "400000 100000\n",
+    "memoryLimit": "34359738368\n",
+    "logicalCpus": 5
+  },
+  "timestamp": "2026-10-17T00:10:31.288Z"
+}

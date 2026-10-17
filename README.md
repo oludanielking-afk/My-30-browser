@@ -136,3 +136,7 @@ retained for 30 days; rerun the workflow to create a fresh download after expiry
 GitHub requires you to sign in with access to the repository to download its
 Actions artifacts. These are unsigned builds; they require installed Microsoft
 Edge and use separate persistent profiles, as described above.
+
+## Multi-worker cloud fleet
+
+The new cloud deployment uses a central web dashboard and three workers with ten fixed profiles each. See [Cloud deployment and verification](docs/CLOUD-DEPLOYMENT.md) and [Measured performance and endurance status](docs/CLOUD-PERFORMANCE.md). The cloud capacity statement is limited to measured fixture results; it is not a promise that every server or website can sustain 30 browsers. The Windows local application's concurrency setting is unchanged.

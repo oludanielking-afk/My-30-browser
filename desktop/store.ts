@@ -32,6 +32,10 @@ export class Store {
     public root: string,
     private encode: (s: string) => Buffer = (s) => Buffer.from(s),
     private decode: (b: Buffer) => string = (b) => b.toString(),
+    private profileIds: string[] = Array.from(
+      { length: 30 },
+      (_, i) => `profile-${String(i + 1).padStart(2, "0")}`,
+    ),
   ) {}
   async init() {
     await fs.mkdir(this.root, { recursive: true, mode: 0o700 });
@@ -39,10 +43,17 @@ export class Store {
       const x = JSON.parse(
         this.decode(await fs.readFile(path.join(this.root, "settings.bin"))),
       );
-      if (!Array.isArray(x.profiles) || x.profiles.length !== 30)
+      if (
+        !Array.isArray(x.profiles) ||
+        x.profiles.length !== this.profileIds.length
+      )
         throw Error("Invalid settings");
       this.profiles = x.profiles.map(validate);
-      if (new Set(this.profiles.map((p) => p.id)).size !== 30)
+      if (
+        new Set(this.profiles.map((p) => p.id)).size !==
+          this.profileIds.length ||
+        this.profiles.some((p) => !this.profileIds.includes(p.id))
+      )
         throw Error("Duplicate profiles");
       this.maxActive = Math.max(1, Math.min(10, Number(x.maxActive) || 5));
     } catch (e: any) {
@@ -50,10 +61,10 @@ export class Store {
         throw Error(
           "Cannot read saved settings. Preserve settings.bin and restore a backup; no data was overwritten.",
         );
-      this.profiles = Array.from({ length: 30 }, (_, i) =>
+      this.profiles = this.profileIds.map((id) =>
         validate({
-          id: `profile-${String(i + 1).padStart(2, "0")}`,
-          name: `Profile ${String(i + 1).padStart(2, "0")}`,
+          id,
+          name: `Profile ${id.slice(-2)}`,
           url: "https://example.com/",
           autoReload: false,
           minSeconds: 120,

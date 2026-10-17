@@ -15,7 +15,12 @@
     "package:win": "npm run build && electron-builder --win nsis portable --x64 --publish never",
     "browsers:win": "node scripts/windows-browser.mjs",
     "package:win:bundled": "npm run browsers:win && npm run build && node scripts/package-bundled.cjs",
-    "test:startup": "node scripts/smoke-electron.mjs"
+    "test:startup": "node scripts/smoke-electron.mjs",
+    "cloud:worker": "bash scripts/cloud-worker.sh",
+    "cloud:coordinator": "node dist/cloud-coordinator.cjs",
+    "cloud:verify": "node dist/cloud-verify.cjs",
+    "cloud:load": "node dist/cloud-load.cjs",
+    "test:cloud": "node scripts/cloud-lab.mjs"
   },
   "dependencies": {
     "express": "5.3.0",

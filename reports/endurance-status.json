@@ -1,0 +1,15 @@
+{
+  "status": "running-not-completed",
+  "checkedAt": "2026-10-17T00:15:53.615379+00:00",
+  "pid": 235744,
+  "requestedSeconds": 86400,
+  "elapsedSecondsAtCheck": 230.191,
+  "samplesAtCheck": 24,
+  "failedSamplesAtCheck": 0,
+  "runningProfileMinimumAtCheck": 30,
+  "reportDirectory": "reports/endurance-20261017",
+  "completed24HourPass": false,
+  "lifetimeWarning": "Ephemeral workspace may suspend or expire; require final completed summary and integration result on a persistent host.",
+  "checkedAtLagos": "2026-10-17T01:15:53.615379+01:00",
+  "expectedCapacityWindowEndLagos": "2026-10-18T01:11:58.745000+01:00"
+}

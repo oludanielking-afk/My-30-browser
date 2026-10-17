@@ -1,0 +1,113 @@
+name: multibrowser-cloud
+x-worker: &worker
+  build:
+    context: ..
+    dockerfile: deployment/Dockerfile
+  image: multibrowser-cloud:local
+  init: true
+  restart: unless-stopped
+  stop_grace_period: 120s
+  shm_size: 2gb
+  mem_limit: 8g
+  cpus: 4
+  pids_limit: 2048
+  read_only: true
+  tmpfs:
+    - /tmp:size=1g,mode=1777
+  security_opt:
+    - no-new-privileges:true
+  networks: [control]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+services:
+  coordinator:
+    image: multibrowser-cloud:local
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    command: ["node", "dist/cloud-coordinator.cjs"]
+    init: true
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    read_only: true
+    tmpfs: [/tmp]
+    ports: ["127.0.0.1:3000:3000"]
+    environment:
+      ADMIN_TOKEN_FILE: /run/secrets/admin-token
+      CLUSTER_TOKEN_FILE: /run/secrets/cluster-token
+      WORKERS_FILE: /etc/mbam/workers.json
+      ALLOW_INTERNAL_HTTP: "1"
+    volumes:
+      - ./workers.json:/etc/mbam/workers.json:ro
+    secrets:
+      [
+        admin-token,
+        cluster-token,
+        worker-1-token,
+        worker-2-token,
+        worker-3-token,
+      ]
+    networks: [control]
+  worker-1:
+    <<: *worker
+    environment:
+      WORKER_ID: worker-1
+      PROFILE_START: "1"
+      PROFILE_COUNT: "10"
+      WORKER_TOKEN_FILE: /run/secrets/worker-1-token
+      VAULT_KEY_FILE: /run/secrets/worker-1-key
+      CLUSTER_TOKEN_FILE: /run/secrets/cluster-token
+      COORDINATOR_URL: http://coordinator:3000
+    volumes: ["worker-1-data:/data"]
+    secrets: [worker-1-token, worker-1-key, cluster-token]
+  worker-2:
+    <<: *worker
+    environment:
+      WORKER_ID: worker-2
+      PROFILE_START: "11"
+      PROFILE_COUNT: "10"
+      WORKER_TOKEN_FILE: /run/secrets/worker-2-token
+      VAULT_KEY_FILE: /run/secrets/worker-2-key
+      CLUSTER_TOKEN_FILE: /run/secrets/cluster-token
+      COORDINATOR_URL: http://coordinator:3000
+    volumes: ["worker-2-data:/data"]
+    secrets: [worker-2-token, worker-2-key, cluster-token]
+  worker-3:
+    <<: *worker
+    environment:
+      WORKER_ID: worker-3
+      PROFILE_START: "21"
+      PROFILE_COUNT: "10"
+      WORKER_TOKEN_FILE: /run/secrets/worker-3-token
+      VAULT_KEY_FILE: /run/secrets/worker-3-key
+      CLUSTER_TOKEN_FILE: /run/secrets/cluster-token
+      COORDINATOR_URL: http://coordinator:3000
+    volumes: ["worker-3-data:/data"]
+    secrets: [worker-3-token, worker-3-key, cluster-token]
+networks:
+  control:
+    driver: bridge
+volumes:
+  worker-1-data:
+  worker-2-data:
+  worker-3-data:
+secrets:
+  admin-token:
+    file: ./.secrets/admin-token
+  cluster-token:
+    file: ./.secrets/cluster-token
+  worker-1-token:
+    file: ./.secrets/worker-1-token
+  worker-1-key:
+    file: ./.secrets/worker-1-key
+  worker-2-token:
+    file: ./.secrets/worker-2-token
+  worker-2-key:
+    file: ./.secrets/worker-2-key
+  worker-3-token:
+    file: ./.secrets/worker-3-token
+  worker-3-key:
+    file: ./.secrets/worker-3-key

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Multi Browser Cloud</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <small>MULTI / BROWSER · CLOUD CONTROL</small>
+        <h1>Browser fleet</h1>
+        <p>Fixed profile ownership. Independent sessions. Measured capacity.</p>
+      </div>
+      <strong id="total">Disconnected</strong>
+    </header>
+    <section class="connection">
+      <label
+        >Dashboard token
+        <input id="token" type="password" autocomplete="off" /></label
+      ><button id="connect">Connect</button
+      ><button id="disconnect">Disconnect</button
+      ><button id="start-all">Start assigned profiles</button
+      ><button id="stop-all">Stop all profiles</button>
+    </section>
+    <p id="error" role="alert"></p>
+    <section id="workers" class="workers"></section>
+    <main id="profiles" class="profiles"></main>
+    <footer>
+      Cloud Chromium windows need a separately secured remote desktop for
+      interactive login. A running browser does not imply online status on any
+      website.
+    </footer>
+    <script src="/app.js"></script>
+  </body>
+</html>

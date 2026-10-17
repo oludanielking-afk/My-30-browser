@@ -38,6 +38,9 @@ export class Manager {
       headless?: boolean;
       executablePath?: string;
       minFreeMB?: number;
+      browserArgs?: string[];
+      beforeReload?: (origin: string) => Promise<boolean>;
+      onIncident?: (id: string, kind: string) => void;
       prepareContext?: (context: BrowserContext) => Promise<void>;
     } = {},
   ) {}
@@ -138,6 +141,8 @@ export class Manager {
       })
     )
       throw Error("Reload skipped: a form is being edited");
+    if (this.options.beforeReload && !(await this.options.beforeReload(origin)))
+      throw Error("Reload skipped: cluster origin rate limit");
     s.busy = true;
     s.last = now;
     this.originLast.set(origin, now);
@@ -196,7 +201,11 @@ export class Manager {
         permissions: [],
         acceptDownloads: false,
         viewport: null,
-        args: ["--disable-background-mode", "--deny-permission-prompts"],
+        args: [
+          "--disable-background-mode",
+          "--deny-permission-prompts",
+          ...(this.options.browserArgs || []),
+        ],
       });
       const cdp = await s.context.newCDPSession(
         s.context.pages()[0] || (await s.context.newPage()),
@@ -220,6 +229,8 @@ export class Manager {
         clearInterval(s.checkpoint);
         if (this.live.get(p.id) === s) {
           this.live.delete(p.id);
+          if (!s.stopping)
+            this.options.onIncident?.(p.id, "unexpected-browser-close");
           this.status.set(p.id, {
             state: "stopped",
             note: s.stopping
@@ -230,6 +241,7 @@ export class Manager {
       });
       s.page = s.context.pages()[0] || (await s.context.newPage());
       s.page.on("crash", () => {
+        this.options.onIncident?.(p.id, "tab-crash");
         s.paused = true;
         this.clear(s);
         this.status.set(p.id, {

@@ -1,0 +1,35 @@
+name: Cloud 24-hour endurance (dedicated runner)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  endurance:
+    # GitHub-hosted jobs cannot run 24 hours. Explicitly provision this label
+    # on a dedicated, trusted Linux machine with the resources in the guide.
+    runs-on: [self-hosted, linux, x64, mbam-endurance]
+    timeout-minutes: 1560
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      DURATION_SECONDS: "86400"
+      REPORT_DIR: reports/local-endurance-ci
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a npm run test:cloud
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloud-24h-endurance-report
+          path: |
+            reports/local-endurance-ci/summary.json
+            reports/local-endurance-ci/integration.json
+            reports/local-endurance-ci/failure.json
+            reports/local-endurance-ci/samples.jsonl
+          if-no-files-found: warn

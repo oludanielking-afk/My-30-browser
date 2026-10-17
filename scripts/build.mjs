@@ -26,3 +26,13 @@ await build({
   outfile: "dist/worker.cjs",
   external: ["express", "playwright"],
 });
+
+for (const name of ["worker", "coordinator", "verify", "load"])
+  await build({
+    entryPoints: [`cloud/${name}.ts`],
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    outfile: `dist/cloud-${name}.cjs`,
+    external: ["express", "playwright"],
+  });

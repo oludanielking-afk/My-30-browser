@@ -1,0 +1,58 @@
+name: Validate cloud worker fleet
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "cloud/**"
+      - "deployment/**"
+      - "desktop/**"
+      - "scripts/**"
+      - "tests/**"
+      - "package*.json"
+      - ".github/workflows/cloud-validation.yml"
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Validate Docker configuration and image
+        run: |
+          node deployment/setup.mjs
+          docker compose -f deployment/compose.yaml config --quiet
+          docker build -f deployment/Dockerfile -t multibrowser-cloud:local .
+      - name: Boot Docker control plane
+        run: |
+          docker compose -f deployment/compose.yaml up -d --no-build
+          ADMIN_TOKEN_FILE=deployment/.secrets/admin-token node scripts/cloud-ready.mjs
+      - name: Stop Docker control plane
+        if: always()
+        run: docker compose -f deployment/compose.yaml down
+      - name: Three-worker integration and 30-browser fixture load
+        env:
+          DURATION_SECONDS: "180"
+          REPORT_DIR: reports/local-ci
+        run: xvfb-run -a npm run test:cloud
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cloud-validation-reports
+          path: |
+            reports/local-ci/summary.json
+            reports/local-ci/integration.json
+            reports/local-ci/failure.json
+            reports/local-ci/samples.jsonl
+          if-no-files-found: warn
+          retention-days: 14

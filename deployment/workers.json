@@ -1,0 +1,53 @@
+[
+  {
+    "id": "worker-1",
+    "url": "http://worker-1:3000",
+    "tokenFile": "/run/secrets/worker-1-token",
+    "profiles": [
+      "profile-01",
+      "profile-02",
+      "profile-03",
+      "profile-04",
+      "profile-05",
+      "profile-06",
+      "profile-07",
+      "profile-08",
+      "profile-09",
+      "profile-10"
+    ]
+  },
+  {
+    "id": "worker-2",
+    "url": "http://worker-2:3000",
+    "tokenFile": "/run/secrets/worker-2-token",
+    "profiles": [
+      "profile-11",
+      "profile-12",
+      "profile-13",
+      "profile-14",
+      "profile-15",
+      "profile-16",
+      "profile-17",
+      "profile-18",
+      "profile-19",
+      "profile-20"
+    ]
+  },
+  {
+    "id": "worker-3",
+    "url": "http://worker-3:3000",
+    "tokenFile": "/run/secrets/worker-3-token",
+    "profiles": [
+      "profile-21",
+      "profile-22",
+      "profile-23",
+      "profile-24",
+      "profile-25",
+      "profile-26",
+      "profile-27",
+      "profile-28",
+      "profile-29",
+      "profile-30"
+    ]
+  }
+]

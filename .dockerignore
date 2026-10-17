@@ -4,3 +4,6 @@ windows-browsers
 data
 .git
 .env
+
+deployment/.secrets
+reports
