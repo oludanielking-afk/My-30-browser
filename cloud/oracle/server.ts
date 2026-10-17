@@ -212,7 +212,11 @@ export async function startOracle() {
       const r = state.records[id];
       r.lastReload = time;
       r.reloadCount++;
-      if (!ok) r.lastError = "Reload failed or server requested backoff";
+      if (!ok) {
+        r.lastError = "Reload failed or server requested backoff";
+        // Preserve automatic 429/503/repeated-failure suspension across restart.
+        if (manager.live.get(id)?.paused) r.reloadPaused = true;
+      }
       event(id, ok ? "reload" : "reload-failed");
       void save().catch(() => {});
     },
