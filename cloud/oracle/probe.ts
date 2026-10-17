@@ -8,7 +8,9 @@ import { codec, atomicJson } from "../common";
 import { ResourceMonitor, policyFromEnv, admissionReason } from "./resources";
 export async function runProbe() {
   const out = path.resolve(process.env.REPORT_DIR || "reports/oracle-free"),
-    root = await fs.mkdtemp(path.join(os.tmpdir(), "mbam-capacity-"));
+    root = await fs.mkdtemp(
+      path.join(process.env.DATA_DIR || os.tmpdir(), "mbam-capacity-"),
+    );
   await fs.mkdir(out, { recursive: true, mode: 0o700 });
   const key = codec(crypto.randomBytes(32).toString("hex")),
     store = new Store(root, key.encode, key.decode);

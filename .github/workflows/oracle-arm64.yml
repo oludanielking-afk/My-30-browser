@@ -47,6 +47,9 @@ jobs:
           docker compose exec -T manager node tools/oracle-restart.mjs prepare
           docker compose restart manager
           docker compose exec -T manager node tools/oracle-restart.mjs verify
+      - name: Equal-duration idle and reload smoke comparison
+        run: |
+          docker compose exec -T -e BASE_URL=http://127.0.0.1:3000 -e DURATION_SECONDS=130 -e RELOAD_MAX_SECONDS=120 -e PROFILE_COUNT=1 -e REPORT_DIR=/reports/comparison manager node tools/compare-modes.mjs
       - name: Resource capacity probe (native runner, not Oracle performance)
         run: |
           docker compose stop
@@ -72,6 +75,8 @@ jobs:
             reports/oracle-free/ci/**/capacity-results.json
             reports/oracle-free/ci/**/capacity-results.csv
             reports/oracle-free/ci/**/restart.json
+            reports/oracle-free/ci/**/summary.json
+            reports/oracle-free/ci/**/comparison.json
           if-no-files-found: warn
   windows-compatibility:
     runs-on: windows-latest

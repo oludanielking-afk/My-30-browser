@@ -494,6 +494,10 @@ export async function startOracle() {
           for (const pid of await fs.readdir("/proc")) {
             if (!/^\d+$/.test(pid)) continue;
             try {
+              const birth = (await fs.readFile(`/proc/${pid}/stat`, "utf8"))
+                .split(") ")
+                .at(-1)!
+                .split(" ")[19];
               const args = (
                 await fs.readFile(`/proc/${pid}/cmdline`, "utf8")
               ).split("\0");
@@ -504,10 +508,6 @@ export async function startOracle() {
                 )
               )
                 continue;
-              const birth = (await fs.readFile(`/proc/${pid}/stat`, "utf8"))
-                .split(") ")
-                .at(-1)!
-                .split(" ")[19];
               const current = (await fs.readFile(`/proc/${pid}/stat`, "utf8"))
                 .split(") ")
                 .at(-1)!

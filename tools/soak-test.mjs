@@ -113,8 +113,8 @@ try {
     await api("/api/profiles/" + id, "PATCH", {
       autoReload: mode === "reload",
       ownerAcknowledged: true,
-      minSeconds: 120,
-      maxSeconds: 300,
+      minSeconds: Number(process.env.RELOAD_MIN_SECONDS || 120),
+      maxSeconds: Number(process.env.RELOAD_MAX_SECONDS || 300),
     });
     await api("/api/profiles/" + id + "/start", "POST");
     await api("/test/" + id + "/seed", "POST", {});
