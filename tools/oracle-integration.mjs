@@ -263,12 +263,22 @@ try {
               .textContent.startsWith("Connected"),
           { timeout: 30000 },
         );
+        await call("/test/profile-01/focus", "POST", {});
+        await page.locator("#screen canvas").focus();
+        await page.keyboard.type("authorized-viewer-input");
+        await wait(
+          async () =>
+            (await call("/test/profile-01/probe", "POST", {})).input ===
+            "authorized-viewer-input",
+          10000,
+        );
         await page.click("#end");
         await page.waitForFunction(
           () =>
             document.querySelector("#state").textContent === "Session ended",
         );
-        viewerConnectivity = "passed actual RFB connection and logout";
+        viewerConnectivity =
+          "passed actual RFB connection, keyboard input and logout";
       },
     );
   if (!external)

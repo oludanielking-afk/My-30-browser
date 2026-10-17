@@ -482,12 +482,18 @@ export async function startOracle() {
             ...(await s.page.evaluate(async () => ({
               owner: localStorage.getItem("owner"),
               ticks: Number(document.querySelector("output")?.textContent),
+              input: (document.querySelector("input") as HTMLInputElement)
+                ?.value,
               geo: (await navigator.permissions.query({ name: "geolocation" }))
                 .state,
             }))),
             cookie: (await s.context!.cookies()).find((c) => c.name === "owner")
               ?.value,
           });
+        } else if (operation === "focus") {
+          await s.page.bringToFront();
+          await s.page.locator("input").focus();
+          res.json({ ok: true });
         } else if (operation === "crash") {
           // A real browser-process loss, not an unsupported/swallowed CDP crash.
           let killed = false;
