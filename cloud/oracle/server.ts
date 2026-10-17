@@ -15,6 +15,7 @@ import {
   admissionReason,
 } from "./resources";
 import { viewer } from "./viewer";
+import { disablePasswordSaving } from "./privacy";
 type RecordState = {
   ownerAcknowledged: boolean;
   notes: string;
@@ -199,6 +200,7 @@ export async function startOracle() {
         await save();
         throw Error(`${id} could not start: ${why}`);
       }
+      await disablePasswordSaving(path.join(root, "profiles", id));
     },
     onLaunch: (id) => {
       state.records[id].lastLaunch = Date.now();
@@ -487,8 +489,40 @@ export async function startOracle() {
               ?.value,
           });
         } else if (operation === "crash") {
-          const c = await s.context!.newCDPSession(s.page);
-          void c.send("Page.crash").catch(() => {});
+          // A real browser-process loss, not an unsupported/swallowed CDP crash.
+          let killed = false;
+          for (const pid of await fs.readdir("/proc")) {
+            if (!/^\d+$/.test(pid)) continue;
+            try {
+              const args = (
+                await fs.readFile(`/proc/${pid}/cmdline`, "utf8")
+              ).split("\0");
+              if (
+                !args.includes(`--mbam-worker-owner=${ownership.owner}`) ||
+                !args.includes(
+                  `--user-data-dir=${path.join(root, "profiles", id)}`,
+                )
+              )
+                continue;
+              const birth = (await fs.readFile(`/proc/${pid}/stat`, "utf8"))
+                .split(") ")
+                .at(-1)!
+                .split(" ")[19];
+              const current = (await fs.readFile(`/proc/${pid}/stat`, "utf8"))
+                .split(") ")
+                .at(-1)!
+                .split(" ")[19];
+              if (birth === current) {
+                process.kill(Number(pid), "SIGKILL");
+                killed = true;
+                break;
+              }
+            } catch {}
+          }
+          if (!killed)
+            throw Error(
+              "Owned fixture browser process was not found; crash test did not run",
+            );
           res.json({ ok: true });
         } else throw Error("Unknown test action");
       } catch (e: any) {

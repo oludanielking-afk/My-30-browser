@@ -85,7 +85,7 @@ cp deployment/oracle-free/.env.example deployment/oracle-free/.env
 nano deployment/oracle-free/.env
 ```
 
-Fill in `ALLOWANCE_CHECKED_ON` with a recent ISO date and **actual verified remaining** free OCPUs, RAM and storage. Set selected instance values to the VM you created. Set `FREE_TIER_VERIFIED=yes` only after checking them. Default container candidates are 3 CPUs / 18 GiB, leaving host overhead on a historical 4-core/24-GB configuration; reduce these on a smaller eligible VM. Keep at least 2 GiB outside the container. `MEMORY_RESERVE_MB` cannot be below 1536, launch budget defaults to 1024 MiB/browser plus 512 MiB startup allowance. These are guards, not proven per-site usage estimates.
+Fill in `ALLOWANCE_CHECKED_ON` with a recent ISO date and **actual verified remaining** free OCPUs, RAM and storage available to this deployment (aggregate allowance minus unrelated resources; do not subtract the selected VM/boot volume twice after creation). Set selected instance values to the VM you created. Set `FREE_TIER_VERIFIED=yes` only after checking them. Default container candidates are 3 CPUs / 18 GiB, leaving host overhead on a historical 4-core/24-GB configuration; reduce these on a smaller eligible VM. Keep at least 2 GiB outside the container. `MEMORY_RESERVE_MB` cannot be below 1536, launch budget defaults to 1024 MiB/browser plus 512 MiB startup allowance. These are guards, not proven per-site usage estimates.
 
 ```sh
 node deployment/oracle-free/preflight.mjs

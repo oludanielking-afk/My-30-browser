@@ -59,6 +59,7 @@ async function refresh() {
     $("overview").replaceChildren(
       ...[
         `Worker: ${s.application} • uptime ${Math.floor(s.uptimeSeconds)}s`,
+        `Alerts: ${s.alerts?.join("; ") || "none"}`,
         `Active ${s.running} / ${s.effectiveLimit} effective (${s.profiles.length} slots)`,
         `CPU ${r.cpuPercent.toFixed(1)}% of available cores • ${r.cores} cores`,
         `RAM available ${r.availableMB.toFixed(0)} MiB / limit ${r.memoryLimitMB.toFixed(0)} MiB`,

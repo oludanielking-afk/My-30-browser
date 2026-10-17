@@ -140,3 +140,7 @@ Edge and use separate persistent profiles, as described above.
 ## Multi-worker cloud fleet
 
 The new cloud deployment uses a central web dashboard and three workers with ten fixed profiles each. See [Cloud deployment and verification](docs/CLOUD-DEPLOYMENT.md) and [Measured performance and endurance status](docs/CLOUD-PERFORMANCE.md). The cloud capacity statement is limited to measured fixture results; it is not a promise that every server or website can sustain 30 browsers. The Windows local application's concurrency setting is unchanged.
+
+### Oracle Always Free ARM64 pilot
+
+An additional single-instance option is developed on `free-tier-arm64`. It preserves the Windows and original three-worker editions. Start with [FREE-TIER-DEPLOYMENT.md](docs/FREE-TIER-DEPLOYMENT.md), [capacity](docs/FREE-TIER-CAPACITY.md), [security](docs/FREE-TIER-SECURITY.md), [troubleshooting](docs/FREE-TIER-TROUBLESHOOTING.md) and the candid [test report](docs/FREE-TIER-TEST-REPORT.md). No native Oracle capacity, 24-hour reliability or guaranteed $0 outcome is claimed; verify current account entitlements and run the supplied probes on the actual server.
