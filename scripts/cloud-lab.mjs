@@ -30,6 +30,16 @@ const token = crypto.randomBytes(32).toString("hex"),
 const children = [];
 const logs = [];
 let stopped = false;
+async function optionalCgroupFile(name) {
+  try {
+    return (await fs.readFile(`/sys/fs/cgroup/${name}`, "utf8")).trim();
+  } catch (error) {
+    // Root cgroups on native VMs omit controller limits. Missing telemetry
+    // is explicitly unknown; it must not turn completed browser checks into a failure.
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") return null;
+    throw error;
+  }
+}
 async function port() {
   const s = net.createServer();
   await new Promise((r, j) => s.once("error", j).listen(0, "127.0.0.1", r));
@@ -382,8 +392,10 @@ try {
     workerKillRecovery: true,
     restartSessionPersistence: true,
     host: {
-      cpuQuota: await fs.readFile("/sys/fs/cgroup/cpu.max", "utf8"),
-      memoryLimit: await fs.readFile("/sys/fs/cgroup/memory.max", "utf8"),
+      cpuQuota: await optionalCgroupFile("cpu.max"),
+      memoryLimit: await optionalCgroupFile("memory.max"),
+      cgroupLimitNote: "null means no controller limit file at this cgroup root; not a measured quota",
+      physicalMemoryBytes: os.totalmem(),
       logicalCpus: os.cpus().length,
     },
     timestamp: new Date().toISOString(),
@@ -396,7 +408,7 @@ try {
 } catch (e) {
   // GitHub's public run page exposes annotations even when raw logs require login.
   // Only the sanitized error is published; worker logs and private state stay local.
-  const message = String(e.message).replaceAll(token, "[redacted]").replaceAll(cluster, "[redacted]");
+  const message = String(e.message).replace(/\b[a-f0-9]{64}\b/gi, "[redacted]");
   if (process.env.GITHUB_ACTIONS === "true") {
     console.error("::error title=Cloud fixture integration failed::" +
       message.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A"));
