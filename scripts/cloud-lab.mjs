@@ -394,6 +394,13 @@ try {
   );
   console.log("PASS", JSON.stringify(result));
 } catch (e) {
+  // GitHub's public run page exposes annotations even when raw logs require login.
+  // Only the sanitized error is published; worker logs and private state stay local.
+  const message = String(e.message).replaceAll(token, "[redacted]").replaceAll(cluster, "[redacted]");
+  if (process.env.GITHUB_ACTIONS === "true") {
+    console.error("::error title=Cloud fixture integration failed::" +
+      message.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A"));
+  }
   await fs.writeFile(
     path.join(out, "failure.json"),
     JSON.stringify({
