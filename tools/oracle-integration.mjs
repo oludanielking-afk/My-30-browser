@@ -133,6 +133,11 @@ try {
       assert.equal(p.cookie, "profile-01");
       assert.equal(p.owner, "profile-01");
       assert.equal(p.geo, "denied");
+      await assert.rejects(call("/api/profiles/profile-01/start", "POST"));
+      assert.ok(
+        (await call("/api/status")).desired.includes("profile-01"),
+        "Rejected duplicate start must preserve restart intent",
+      );
     },
   );
   await check(

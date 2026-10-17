@@ -429,6 +429,8 @@ export async function startOracle() {
           await manager.action(id, "stop");
           return;
         }
+        if (action === "start" && manager.live.has(id))
+          throw Error("Profile already open; use Restart");
         if (action === "start" || action === "restart") {
           if (action === "restart") await manager.action(id, "stop");
           r.attempts = 0;
@@ -452,6 +454,7 @@ export async function startOracle() {
         )
           throw Error("Idle mode does not permit reload actions");
         if (action === "pause" || action === "resume") {
+          if (!manager.live.has(id)) throw Error("Start this profile first");
           r.reloadPaused = action === "pause";
           await save();
         }
