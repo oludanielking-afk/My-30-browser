@@ -32,7 +32,7 @@ if [ "${1:-}" = probe ]; then
 fi
 # VNC and WebSocket ports are loopback-only INSIDE the container. The Node
 # gateway authenticates both viewer HTTP and WebSocket upgrades server-side.
-x11vnc -display "$DISPLAY" -localhost -rfbport 5900 -nopw -forever -shared -noclipboard -nosetclipboard -noxrecord >/tmp/vnc.log 2>&1 & children+=("$!")
+x11vnc -display "$DISPLAY" -localhost -listen 127.0.0.1 -no6 -rfbport 5900 -nopw -forever -shared -nosel -noclipboard -nosetclipboard -noxrecord >/tmp/vnc.log 2>&1 & children+=("$!")
 websockify --heartbeat=20 127.0.0.1:6081 127.0.0.1:5900 >/tmp/websockify.log 2>&1 & children+=("$!")
 node dist/oracle-server.cjs & children+=("$!")
 # Any essential component exiting terminates the container; Docker applies bounded backoff.
