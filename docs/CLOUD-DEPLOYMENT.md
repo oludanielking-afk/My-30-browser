@@ -127,13 +127,13 @@ DURATION_SECONDS=86400 REPORT_DIR=reports/endurance-your-run \
 xvfb-run -a npm run test:cloud
 ```
 
-Check `summary.json` while it runs; `completed:false` is not a pass. After the duration, the harness runs recovery checks, writes `integration.json`, and stops only its own laboratory processes. Require both a completed zero-failure summary and a completed integration result. On interruption, a partial report remains; do not relabel it as a full 24-hour test. The ephemeral onboarding workspace may be suspended or destroyed before a background test finishes. See the performance report for the exact status of any run started in this task.
+Check `summary.json` while it runs; `completed:false` is not a pass. After the duration, the harness runs recovery checks, writes `integration.json`, and stops only its own laboratory processes. Require both a completed zero-failure summary and a completed integration result. On interruption, a partial report remains; do not relabel it as a full 24-hour test. The harness rejects observation gaps over 30 seconds or fewer than 95% of expected ten-second samples, including suspension at the end of a run. The ephemeral onboarding workspace may be suspended or destroyed before a background test finishes. See the performance report for the exact status of any run started in this task.
 
 For a background laboratory created in this workspace, inspect or stop it safely with PID-reuse checks:
 
 ```sh
-node scripts/stop-cloud-lab.mjs reports/endurance-20261017 --status
-node scripts/stop-cloud-lab.mjs reports/endurance-20261017
+node scripts/stop-cloud-lab.mjs reports/endurance-20261017-gapguard --status
+node scripts/stop-cloud-lab.mjs reports/endurance-20261017-gapguard
 ```
 
 The second command requests graceful shutdown; it does not delete profile data or label the partial run as passed.

@@ -6,7 +6,7 @@ On 17 October 2026, **30 real, simultaneously active Chromium profile contexts a
 
 The subsequent integration checks passed: invalid authentication rejected; a worker refused another shard's profile; the kernel rejected a duplicate volume owner; the cluster reload gate denied a second immediate same-origin request; a tab recovered after a deliberate crash; a worker recovered after forced process loss; and cookies/localStorage remained isolated after browser/worker restarts. Recovery checks ran **after** the steady-state capacity window, so outages were not hidden inside the zero-failure capacity number.
 
-The application unit/integration suite passed **11 tests**, and the existing real-browser persistence/geolocation test passed. Strict TypeScript/build checks and workflow linting passed. The GitHub cloud validation workflow is provided to build/boot the Docker control plane and repeat the native fixture integration test; its run outcome must be checked separately.
+The application unit/integration suite passed **12 tests**, and the existing real-browser persistence/geolocation test passed. Strict TypeScript/build checks and workflow linting passed. The GitHub cloud validation workflow has also successfully built the Docker image and booted the three-worker control plane in [run 38985606535](https://github.com/oludanielking-afk/My-30-browser/actions/runs/38985606535). Its separate native fixture repetition and overall outcome must be checked on that run.
 
 Evidence committed with this report:
 
@@ -53,14 +53,16 @@ For three separate worker machines, start with **4 vCPU / 8 GiB per worker**, wi
 
 ## Docker status
 
-Compose configuration passed validation. This cloud environment could not build the final image because the proxy denied the official Microsoft image-layer host `westus.data.mcr.microsoft.com`. No verification was disabled, no alternate untrusted image was used, and the native process results are **not labeled as Docker runtime results**. The GitHub workflow can exercise image build and control-plane startup where that registry is reachable. A 30-browser test under the exact production container CPU/RAM limits remains a deployment acceptance task unless an actual later report records it.
+Compose configuration passed validation. This cloud environment could not build the final image because the proxy denied the official Microsoft image-layer host `westus.data.mcr.microsoft.com`. No verification was disabled, no alternate untrusted image was used, and the native process results are **not labeled as Docker runtime results**. GitHub Actions did successfully build the image, boot all three worker APIs plus the coordinator, verify readiness and stop the control plane in the run linked above. This verifies Docker build/startup with no active production sites, not a 30-browser Docker load test. A 30-browser test under the exact production container CPU/RAM limits remains a deployment acceptance task unless an actual later report records it.
 
 ## 24-hour endurance status
 
-A background 86,400-second fixture run has been requested on this cloud machine. Its exact startup/heartbeat status is recorded in [endurance-status.json](../reports/endurance-status.json). **No completed 24-hour endurance pass is claimed.** The ongoing result is under `reports/endurance-20261017/summary.json`; a genuine pass requires `completed:true`, zero failed samples and the final `integration.json` after recovery checks.
+A background 86,400-second fixture run has been requested on this cloud machine. Its exact startup/heartbeat status is recorded in [endurance-status.json](../reports/endurance-status.json). **No completed 24-hour endurance pass is claimed.** The ongoing result is under `reports/endurance-20261017-gapguard/summary.json`; a genuine pass requires `completed:true`, zero failed samples and the final `integration.json` after recovery checks.
 
 This is an ephemeral development environment. Suspension, expiration or resource reclamation can interrupt the run; if the process/heartbeat stops, the result is incomplete. The manual dedicated-runner workflow and the deployment guide provide a reproducible way to conduct the full test on a persistent host. GitHub-hosted runners cannot perform a single 24-hour job; the dedicated workflow uses an explicitly provisioned `mbam-endurance` self-hosted label and a 26-hour timeout. No self-hosted runner was provisioned or assumed connected.
 
 ## Acceptance before real production use
 
 Repeat the controlled test inside the deployed containers, then run approved journeys against your own staging websites under the intended resource limits for at least 24 hours. Measure functional failures and session retention in addition to browser counts. Test host/container restarts and offline backups/restores. Native Windows installer checks, real third-party login flows and remote-desktop authentication are separate from this cloud fixture benchmark. Thirty active processes alone do not prove thirty usable production sessions.
+
+The endurance harness now requires at least 95% of the expected ten-second samples and rejects observation gaps longer than 30 seconds, including a gap at the end of the run. A suspended VM cannot pass solely because its wall clock advanced by 24 hours. The earlier 510-second partial endurance trial was stopped and the 24-hour clock restarted with this guard; neither trial is reported as a completed endurance pass.

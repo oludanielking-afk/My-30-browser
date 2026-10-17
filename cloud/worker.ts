@@ -45,6 +45,8 @@ export async function startWorker() {
       !Array.isArray(control.desired) ||
       !Array.isArray(control.paused) ||
       !control.failures ||
+      typeof control.failures !== "object" ||
+      Array.isArray(control.failures) ||
       !Number.isInteger(control.incidents) ||
       control.incidents < 0 ||
       new Set(control.desired).size !== control.desired.length ||

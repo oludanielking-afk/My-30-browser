@@ -23,5 +23,7 @@
   "cpuQuotaCores": 4,
   "memoryLimitGiB": 32,
   "dockerRuntimeVerified": false,
-  "endurance24hPassed": false
+  "endurance24hPassed": false,
+  "maximumObservationGapMs": 10011,
+  "expectedSamples": 18
 }

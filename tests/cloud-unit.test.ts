@@ -6,6 +6,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { codec, ids } from "../cloud/common";
 import { Store } from "../desktop/store";
+import { evidencePass } from "../cloud/load";
 test("cloud AES-GCM metadata authenticates ciphertext", () => {
   const key = crypto.randomBytes(32).toString("hex"),
     c = codec(key),
@@ -36,4 +37,12 @@ test("fixed ten-profile shards preserve assignments and refuse reassignment of e
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
+});
+
+test("endurance cannot pass after suspension or insufficient sampling", () => {
+  assert.equal(evidencePass(180, 18, 0, 10050), true);
+  assert.equal(evidencePass(86400, 18, 0, 86000000), false);
+  assert.equal(evidencePass(86400, 8640, 0, 60000), false);
+  assert.equal(evidencePass(86400, 8640, 1, 10000), false);
+  assert.equal(evidencePass(86400, 8640, 0, 10000), true);
 });
