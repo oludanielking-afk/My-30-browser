@@ -489,6 +489,7 @@ export async function startOracle() {
             ...(await s.page.evaluate(async () => ({
               owner: localStorage.getItem("owner"),
               ticks: Number(document.querySelector("output")?.textContent),
+              navigation: performance.timeOrigin,
               input: (document.querySelector("input") as HTMLInputElement)
                 ?.value,
               geo: (await navigator.permissions.query({ name: "geolocation" }))

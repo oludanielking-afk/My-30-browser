@@ -144,17 +144,26 @@ try {
       )
         ok = false;
       for (const id of ids) {
-        const p = await api("/test/" + id + "/probe", "POST", {});
+        let p;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            p = await api("/test/" + id + "/probe", "POST", {});
+            break;
+          } catch (e) {
+            if (attempt === 4) throw e;
+            await new Promise((r) => setTimeout(r, 250));
+          }
+        }
         if (p.cookie !== id || p.owner !== id || p.geo !== "denied") ok = false;
         const prior = ticks.get(id);
         const profile = latest.profiles.find((p) => p.id === id);
         if (
           prior &&
-          profile.reloadCount === prior.reloads &&
+          p.navigation === prior.navigation &&
           p.ticks <= prior.ticks
         )
           ok = false;
-        ticks.set(id, { ticks: p.ticks, reloads: profile.reloadCount });
+        ticks.set(id, { ticks: p.ticks, navigation: p.navigation });
       }
       cpuSum += latest.resources.cpuPercent;
       ramSum += latest.resources.treeRssMB;
