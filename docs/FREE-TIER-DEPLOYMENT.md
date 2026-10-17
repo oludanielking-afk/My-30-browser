@@ -22,7 +22,7 @@ Official compatibility sources successfully retrieved on the same date:
 - [Pinned Playwright Chromium sandbox seccomp policy](https://github.com/microsoft/playwright/blob/v1.64.1/utils/docker/seccomp_profile.json), copied verbatim to `deployment/oracle-free/seccomp.json`.
 - [Official Playwright Docker recipe](https://github.com/microsoft/playwright/blob/main/utils/docker/Dockerfile.noble), reviewed for installation practice. This edition uses multi-platform `node:24-bookworm` and installs only the pinned Chromium package plus Debian viewer tools; it does not depend on an x64-only browser image.
 
-Node 24, Playwright 1.64.1 and the existing npm lockfile are retained. TypeScript/esbuild/React versions are unchanged. Electron is built for compatibility but not launched in the Oracle container. Debian provides ARM64 Xvfb, Openbox, x11vnc, noVNC and websockify through signed package repositories. Image/package security updates require rebuilding; the Node major/distribution tags and Debian packages are moving security-update inputs rather than frozen image digests. Record deployed image IDs and package versions for a release. No unmaintained Chromium binary, snap-in-Docker workaround or fingerprint/evasion option is added.
+Node 24, Playwright 1.64.1 and the existing npm lockfile are retained. Its installed `browsers.json` declares Chromium/Chrome for Testing **156.0.8078.4, revision 1248**, including the corresponding headless shell; the Oracle manager uses headed Chromium, not the shell. TypeScript/esbuild/React versions are unchanged. Electron is built for compatibility but not launched in the Oracle container. Debian provides ARM64 Xvfb, Openbox, x11vnc, noVNC and websockify through signed package repositories. Image/package security updates require rebuilding; the Node major/distribution tags and Debian packages are moving security-update inputs rather than frozen image digests. Record deployed image IDs and package versions for a release. No unmaintained Chromium binary, snap-in-Docker workaround or fingerprint/evasion option is added.
 
 ### Free-tier verification checklist (before creating anything)
 
@@ -74,7 +74,14 @@ sudo docker version
 sudo docker compose version
 ```
 
-Docker group membership grants root-equivalent access. The commands below use `sudo docker` rather than assuming an unprivileged Docker socket. No app container receives the socket. If another Docker install exists, follow Docker's migration instructions instead of blindly replacing packages. Install Node 24 LTS for the small setup/preflight scripts using a trusted, checksum-verified distribution; all app build/runtime dependencies are inside Docker. Verify `node --version` (24.x).
+Docker group membership grants root-equivalent access. The commands below use `sudo docker` rather than assuming an unprivileged Docker socket. No app container receives the socket. If another Docker install exists, follow Docker's migration instructions instead of blindly replacing packages. Install Node 24 LTS for the small setup/preflight scripts using a trusted, checksum-verified distribution; all app build/runtime dependencies are inside Docker. Verify `node --version` (24.x). If you prefer not to install Node on the host, use the official multi-platform Node container for these two setup steps instead:
+
+```sh
+sudo docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work node:24-bookworm node deployment/oracle-free/preflight.mjs
+sudo docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work node:24-bookworm node deployment/oracle-free/setup.mjs
+```
+
+Run those after cloning the repository and filling in `.env` as described below. They mount only the project directory, not the Docker socket or your home directory.
 
 ## Download and configure
 

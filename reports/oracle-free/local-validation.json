@@ -1,0 +1,41 @@
+{
+  "checkedOn": "2026-10-17",
+  "hostArchitecture": "x64",
+  "nativeOracle": false,
+  "build": "passed",
+  "unitTests": {
+    "passed": 16,
+    "failed": 0
+  },
+  "existingRealBrowserTest": "passed",
+  "workflowLint": "passed",
+  "composeConfig": "passed",
+  "syntheticPreflightCases": [
+    "unacknowledged rejected",
+    "consistent synthetic configuration accepted (not Oracle entitlement)",
+    "over-allocation rejected"
+  ],
+  "dashboardSmoke": {
+    "cards": 30,
+    "authenticated": true
+  },
+  "viewerSmoke": {
+    "authenticatedRfb": true,
+    "framebufferRendered": true,
+    "observedPixelRgba": [
+      236,
+      242,
+      254,
+      255
+    ],
+    "logoutLabelAndRevocation": "passed",
+    "backend": "Debian noVNC 1.3.0 / websockify 0.10.0 / x11vnc 0.9.16 on Xvfb; x64 viewer diagnostic, not managed Oracle browser validation"
+  },
+  "oracleCapacityProbe": "failed first sandboxed system Chromium launch, maximum successful 0",
+  "localDockerBuild": "blocked by container DNS for deb.debian.org",
+  "oracleDocsResearch": "official Oracle hosts blocked by proxy HTTP 403",
+  "oracleSoak": {
+    "status": "not-started",
+    "elapsedSeconds": 0
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "source": "https://github.com/oludanielking-afk/My-30-browser/actions/runs/38993083735",
+  "sourceKind": "Public Actions notice extracted from successful controlled probe; complete reports are in the workflow artifact",
+  "testedCommit": "359f5992db7a8ca6a3af034857127535be91059f",
+  "configuredProbeContainer": {
+    "cpuLimit": 2,
+    "memoryLimitGiB": 6
+  },
+  "measurement": {
+    "architecture": "arm64",
+    "maximumSuccessful": 2,
+    "recommendedLimit": 1,
+    "measuredSecondsPerStep": 30,
+    "peakTreeRssMB": 2205.46484375,
+    "minimumAvailableMB": 5700.98828125,
+    "crashes": 0,
+    "nativeOracle": false
+  },
+  "nativeOracle": false,
+  "claims": [
+    "Native ARM64 compatibility only",
+    "30-second fixture steps are not endurance evidence",
+    "Do not copy this calibration to Oracle; run the probe locally"
+  ]
+}
