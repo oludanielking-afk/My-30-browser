@@ -73,7 +73,10 @@ async function refresh() {
       .slice(-12)
       .map((e) => `${new Date(e.time).toLocaleString()} ${e.id}: ${e.kind}`)
       .join("\n");
-    if (!$("profiles").contains(document.activeElement))
+    if (!(
+      document.activeElement?.matches("input,textarea,select") &&
+      $("profiles").contains(document.activeElement)
+    ))
       $("profiles").replaceChildren(...s.profiles.map(card));
     message("Connected • private single-worker management");
   } catch (e) {
