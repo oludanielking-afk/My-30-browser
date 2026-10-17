@@ -49,9 +49,12 @@ for (const id of ids) {
       "Every soak profile must already be assigned to the local fixture.invalid URL; refuses to overwrite real profile configuration",
     );
 }
-const start = Date.now(),
+let start = Date.now(),
   clock = performance.now();
 let previous = clock,
+  previousWall = Date.now(),
+  cpuSum = 0,
+  ramSum = 0,
   samples = 0,
   failures = 0,
   maxGap = 0,
@@ -80,6 +83,13 @@ async function summary() {
     peakRssMB,
     minAvailableMB: Number.isFinite(minAvailableMB) ? minAvailableMB : null,
     peakCpuPercent,
+    meanCpuPercent: samples ? cpuSum / samples : 0,
+    meanTreeRssMB: samples ? ramSum / samples : 0,
+    fixturePageRequests: latest
+      ? latest.fixtureRequests - initial.fixtureRequests
+      : 0,
+    browserUptimeSeconds: Math.max(0, (performance.now() - clock) / 1000),
+    errorRate: samples ? failures / samples : 0,
     crashes: latest ? latest.crashes - crashes : 0,
     error,
     pass:
@@ -109,11 +119,17 @@ try {
     await api("/api/profiles/" + id + "/start", "POST");
     await api("/test/" + id + "/seed", "POST", {});
   }
+  start = Date.now();
+  clock = performance.now();
+  previous = clock;
+  previousWall = Date.now();
   const ticks = new Map();
   await summary();
   while (performance.now() - clock < seconds * 1000 && !interrupted) {
     const now = performance.now(),
-      gap = now - previous;
+      gap = Math.max(now - previous, Date.now() - previousWall);
+    if (Date.now() < previousWall) failures++;
+    previousWall = Date.now();
     previous = now;
     maxGap = Math.max(maxGap, gap);
     let ok = gap <= 30000,
@@ -140,6 +156,8 @@ try {
           ok = false;
         ticks.set(id, { ticks: p.ticks, reloads: profile.reloadCount });
       }
+      cpuSum += latest.resources.cpuPercent;
+      ramSum += latest.resources.treeRssMB;
       peakRssMB = Math.max(peakRssMB, latest.resources.treeRssMB);
       minAvailableMB = Math.min(minAvailableMB, latest.resources.availableMB);
       peakCpuPercent = Math.max(peakCpuPercent, latest.resources.cpuPercent);
@@ -169,7 +187,11 @@ try {
       ),
     );
   }
-  maxGap = Math.max(maxGap, performance.now() - previous);
+  maxGap = Math.max(
+    maxGap,
+    performance.now() - previous,
+    Date.now() - previousWall,
+  );
   completed = !interrupted && performance.now() - clock >= seconds * 1000;
 } catch (e) {
   error = e.message;

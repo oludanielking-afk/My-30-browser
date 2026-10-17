@@ -174,6 +174,7 @@ export async function startOracle() {
     string,
     { responsive: boolean; checkedAt: number }
   >();
+  let fixtureRequests = 0;
   const manager = new Manager(store, {
     headless: false,
     executablePath: process.env.CHROMIUM_EXECUTABLE || undefined,
@@ -222,6 +223,7 @@ export async function startOracle() {
     prepareContext: test
       ? async (c) => {
           await c.route("https://fixture.invalid/**", async (route) => {
+            fixtureRequests++;
             const id = new URL(route.request().url()).pathname.slice(1);
             if (!assigned.includes(id)) {
               await route.abort();
@@ -323,26 +325,28 @@ export async function startOracle() {
     stopViewer = viewer(app, server, authenticate);
   app.get("/health/live", (_, res) => res.json({ ok: !closing }));
   app.get("/health/ready", authenticate, (_, res) =>
-    res
-      .status(closing ? 503 : 200)
-      .json({
-        ok: !closing,
-        application: "running",
-        architecture: process.arch,
-      }),
+    res.status(closing ? 503 : 200).json({
+      ok: !closing,
+      application: "running",
+      architecture: process.arch,
+    }),
   );
   app.get("/api/status", authenticate, (_, res) =>
     res.json({
       ...manager.snapshot(),
-      profiles: manager
-        .snapshot()
-        .profiles.map((p) => ({
-          ...p,
-          ...state.records[p.id],
-          mode: p.autoReload ? "CONTROLLED_RELOAD" : "IDLE",
-          health: pageHealth.get(p.id),
-          authentication: "unknown; manual verification required",
-        })),
+      fixtureRequests: test ? fixtureRequests : undefined,
+      alerts: [
+        resources.availableMB < policy.reserveMB ? "Low memory reserve" : null,
+        resources.diskFreeMB < policy.diskReserveMB ? "Low disk space" : null,
+        cpuPressure >= 3 ? "Sustained CPU pressure" : null,
+      ].filter(Boolean),
+      profiles: manager.snapshot().profiles.map((p) => ({
+        ...p,
+        ...state.records[p.id],
+        mode: p.autoReload ? "CONTROLLED_RELOAD" : "IDLE",
+        health: pageHealth.get(p.id),
+        authentication: "unknown; manual verification required",
+      })),
       resources,
       policy,
       effectiveLimit: permittedLimit(policy, resources, manager.live.size),
@@ -492,12 +496,10 @@ export async function startOracle() {
       }
     });
   }
-  app.use(
-    express.static(path.resolve("cloud/oracle/public"), {
-      index: "index.html",
-      dotfiles: "deny",
-    }),
-  );
+  for (const asset of ["index.html", "app.js", "style.css"])
+    app.get(asset === "index.html" ? "/" : "/" + asset, (_req, res) =>
+      res.sendFile(path.resolve("cloud/oracle/public", asset)),
+    );
   app.use((e: Error, _req: unknown, res: any, _next: unknown) =>
     res.status(400).json({ error: "Invalid request" }),
   );

@@ -41,7 +41,7 @@ jobs:
       - run: docker compose up -d
       - name: Docker headed browser, security, reload and authenticated RFB tests
         run: |
-          docker compose exec -T -e BASE_URL=http://127.0.0.1:3000 -e REQUIRE_VIEWER=1 -e REPORT_DIR=/reports/integration manager node tools/oracle-integration.mjs
+          docker compose exec -T -e GITHUB_ACTIONS=true -e BASE_URL=http://127.0.0.1:3000 -e REQUIRE_VIEWER=1 -e REPORT_DIR=/reports/integration manager node tools/oracle-integration.mjs
       - name: Controlled container restart preserves desired session
         run: |
           docker compose exec -T manager node tools/oracle-restart.mjs prepare
@@ -50,7 +50,7 @@ jobs:
       - name: Resource capacity probe (native runner, not Oracle performance)
         run: |
           docker compose stop
-          docker compose run --rm -e PROBE_MAX=2 -e STEP_SECONDS=30 -e REPORT_DIR=/reports/capacity manager probe
+          docker compose run --rm -e GITHUB_ACTIONS=true -e PROBE_MAX=2 -e STEP_SECONDS=30 -e REPORT_DIR=/reports/capacity manager probe
       - name: Export safe reports
         if: always()
         run: |
@@ -87,3 +87,29 @@ jobs:
       - run: npx playwright install chromium
       - run: npm run test:browser
       - run: npm run test:startup
+
+  cloud-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      DURATION_SECONDS: "180"
+      REPORT_DIR: reports/local-oracle-compat
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: "24", cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a npm run test:cloud
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-cloud-compatibility
+          path: |
+            reports/local-oracle-compat/summary.json
+            reports/local-oracle-compat/integration.json
+            reports/local-oracle-compat/failure.json
+          if-no-files-found: warn

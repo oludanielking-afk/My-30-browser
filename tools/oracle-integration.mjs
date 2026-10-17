@@ -302,6 +302,33 @@ try {
   );
   console.log(JSON.stringify(result));
 } catch (e) {
+  const status = await call("/api/status").catch(() => null);
+  const diagnostic = {
+    lastCompleted: tests.at(-1)?.name,
+    running: status?.running,
+    firstProfile: status?.profiles[0] && {
+      state: status.profiles[0].state,
+      attempts: status.profiles[0].attempts,
+      lastError: status.profiles[0].lastError,
+    },
+    events: status?.events?.slice(-6),
+  };
+  if (process.env.GITHUB_ACTIONS === "true")
+    console.error(
+      "::notice title=Fixture diagnostic::" +
+        JSON.stringify(diagnostic)
+          .replaceAll("%", "%25")
+          .replaceAll("\n", "%0A"),
+    );
+  if (process.env.GITHUB_ACTIONS === "true")
+    console.error(
+      "::error title=Oracle integration failed::" +
+        String(e.message)
+          .replace(/\b[a-f0-9]{64}\b/gi, "[redacted]")
+          .replaceAll("%", "%25")
+          .replaceAll("\n", "%0A")
+          .replaceAll("\r", "%0D"),
+    );
   console.error(
     "Integration failed:",
     String(e.message).replace(/\b[a-f0-9]{64}\b/gi, "[redacted]"),

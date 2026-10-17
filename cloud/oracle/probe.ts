@@ -79,24 +79,55 @@ export async function runProbe() {
         maxSeconds: 120,
       });
       const start = performance.now();
+      let launching = true;
+      const startupSamples: any[] = [];
+      const observeStartup = (async () => {
+        while (launching) {
+          startupSamples.push({
+            timestamp: new Date().toISOString(),
+            phase: "startup",
+            count: manager.live.size,
+            resources: await monitor.sample(root),
+            profiles: [],
+            functional: null,
+            crashes,
+            requests,
+          });
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      })();
+      let launched = false,
+        startupMs = 0;
       try {
         await manager.action(id, "start");
+        launched = true;
+        startupMs = performance.now() - start;
       } catch (e: any) {
         failedLaunches.push({
           count: n,
           error:
             "Chromium launch failed; inspect environment and sandbox support",
         });
-        break;
+      } finally {
+        launching = false;
+        await observeStartup;
       }
-      const startupMs = performance.now() - start,
-        end = Date.now() + seconds * 1000;
-      let ok = true,
+      samples.push(...startupSamples);
+      for (const sample of startupSamples)
+        await fs.appendFile(
+          path.join(out, "capacity-samples.jsonl"),
+          JSON.stringify(sample) + "\n",
+        );
+      if (!launched) break;
+      const end = Date.now() + seconds * 1000;
+      let ok = !startupSamples.some(
+          (s) => s.resources.availableMB < policy.reserveMB,
+        ),
         pressure = 0,
         observations = 0,
         maxGap = 0,
         lastTime = Date.now();
-      const ticks = new Map<string, number>();
+      const ticks = new Map<string, { ticks: number; navigation: number }>();
       while (Date.now() < end && !stopped) {
         const now = Date.now();
         maxGap = Math.max(maxGap, now - lastTime);
@@ -107,10 +138,25 @@ export async function runProbe() {
         const perProfile: any[] = [];
         for (const [pid, s] of manager.live) {
           try {
-            const value = await s.page!.evaluate(() =>
-              Number(document.querySelector("output")!.textContent),
-            );
-            if (ticks.has(pid) && value <= ticks.get(pid)!) functional = false;
+            const value = await Promise.race([
+              s.page!.evaluate(() => ({
+                ticks: Number(document.querySelector("output")!.textContent),
+                navigation: performance.timeOrigin,
+              })),
+              new Promise<never>((_, reject) =>
+                setTimeout(
+                  () => reject(Error("Fixture probe timed out")),
+                  2500,
+                ),
+              ),
+            ]);
+            const prior = ticks.get(pid);
+            if (
+              prior &&
+              value.navigation === prior.navigation &&
+              value.ticks <= prior.ticks
+            )
+              functional = false;
             ticks.set(pid, value);
             perProfile.push({ id: pid, responsive: true });
           } catch {
@@ -236,9 +282,23 @@ export async function runProbe() {
           ].join(","),
         )
         .join("\n") +
-      "\n",
+      (samples.length ? "\n" : ""),
   );
   console.log(JSON.stringify(result, null, 2));
+  if (process.env.GITHUB_ACTIONS === "true")
+    console.log(
+      "::notice title=Controlled ARM64 capacity fixture::" +
+        JSON.stringify({
+          architecture: process.arch,
+          maximumSuccessful,
+          recommendedLimit,
+          measuredSecondsPerStep: seconds,
+          peakTreeRssMB: result.peakTreeRssMB,
+          minimumAvailableMB: result.minimumAvailableMB,
+          crashes,
+          nativeOracle: false,
+        }),
+    );
   if (!recommendedLimit || interrupted) process.exitCode = 1;
   return result;
 }
