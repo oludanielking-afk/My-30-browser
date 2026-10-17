@@ -5,7 +5,12 @@ import crypto from "node:crypto";
 import { Store } from "../../desktop/store";
 import { Manager } from "../../desktop/manager";
 import { codec, atomicJson } from "../common";
-import { ResourceMonitor, policyFromEnv, admissionReason } from "./resources";
+import {
+  ResourceMonitor,
+  policyFromEnv,
+  admissionReason,
+  linuxPageSize,
+} from "./resources";
 export async function runProbe() {
   const out = path.resolve(process.env.REPORT_DIR || "reports/oracle-free"),
     root = await fs.mkdtemp(
@@ -323,7 +328,7 @@ async function processTrees(root: string) {
       processes.push({
         pid: Number(id),
         ppid: Number(f[1]),
-        rssMB: (Number(f[21]) * 4096) / 1048576,
+        rssMB: (Number(f[21]) * linuxPageSize()) / 1048576,
         id: dir
           ? path.basename(dir.slice("--user-data-dir=".length))
           : undefined,

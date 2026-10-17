@@ -1,7 +1,27 @@
 import fs from "node:fs/promises";
 import os from "node:os";
+import { readFileSync } from "node:fs";
 import { Metrics } from "../metrics";
 export const MiB = 1048576;
+let pageSize: number | undefined;
+export function linuxPageSize() {
+  if (pageSize) return pageSize;
+  if (!["arm64", "x64"].includes(process.arch) || os.endianness() !== "LE")
+    throw Error("Unsupported Linux sampling ABI");
+  const aux = readFileSync("/proc/self/auxv");
+  for (let offset = 0; offset + 16 <= aux.length; offset += 16) {
+    if (aux.readBigUInt64LE(offset) === 6n) {
+      const value = Number(aux.readBigUInt64LE(offset + 8));
+      if (value >= 4096 && value <= 1048576 && (value & (value - 1)) === 0) {
+        pageSize = value;
+        return value;
+      }
+    }
+  }
+  throw Error(
+    "Cannot determine kernel page size; resource measurements unavailable",
+  );
+}
 export type Resources = Awaited<ReturnType<ResourceMonitor["sample"]>>;
 async function read(name: string) {
   try {
@@ -56,6 +76,9 @@ export class ResourceMonitor {
         : hostCpuPercent;
     return {
       ...m,
+      // The shared x64 sampler uses 4-KiB pages; normalize to this ARM kernel.
+      treeRssMB: (m.treeRssMB * linuxPageSize()) / 4096,
+      pageSizeBytes: linuxPageSize(),
       totalMB,
       hostAvailableMB,
       availableMB,
