@@ -16,7 +16,9 @@ const token = external
   ? (await fs.readFile(process.env.ADMIN_TOKEN_FILE, "utf8")).trim()
   : crypto.randomBytes(32).toString("hex");
 const base = process.env.BASE_URL || "http://127.0.0.1:3099";
-let child, log, driver;
+let child, log, driver, viewerPage;
+let viewerPhase = "not started";
+const viewerErrors = [];
 const tests = [];
 const started = Date.now();
 async function call(route, method = "GET", body) {
@@ -242,11 +244,23 @@ try {
       "noVNC connects through authenticated WebSocket gateway",
       async () => {
         driver = await chromium.launch({
-          headless: false,
+          // Independent client must not appear inside the remote desktop it views.
+          headless: true,
           executablePath: process.env.TEST_CHROMIUM || undefined,
           chromiumSandbox: true,
         });
         const page = await driver.newPage();
+        viewerPage = page;
+        page.on("pageerror", (e) => viewerErrors.push(e.message));
+        page.on("console", (m) => {
+          if (m.type() === "error") viewerErrors.push(m.text());
+        });
+        page.on("requestfailed", (r) =>
+          viewerErrors.push(
+            new URL(r.url()).pathname + ": " + r.failure()?.errorText,
+          ),
+        );
+        viewerPhase = "dashboard connection";
         await page.goto(base);
         await page.fill("#token", token);
         await page.click("#login button");
@@ -255,6 +269,7 @@ try {
         );
         await page.click("#viewer");
         await page.waitForSelector("#viewer-link:not([hidden])");
+        viewerPhase = "RFB connection";
         await page.goto(base + "/viewer/viewer.html");
         await page.waitForFunction(
           () =>
@@ -263,6 +278,7 @@ try {
               .textContent.startsWith("Connected"),
           { timeout: 30000 },
         );
+        viewerPhase = "RFB keyboard input";
         await call("/test/profile-01/focus", "POST", {});
         await page.locator("#screen canvas").focus();
         await page.keyboard.type("authorized-viewer-input");
@@ -272,6 +288,7 @@ try {
             "authorized-viewer-input",
           10000,
         );
+        viewerPhase = "viewer logout";
         await page.click("#end");
         await page.waitForFunction(
           () =>
@@ -315,6 +332,14 @@ try {
   const status = await call("/api/status").catch(() => null);
   const diagnostic = {
     lastCompleted: tests.at(-1)?.name,
+    viewerPhase,
+    viewerState: await viewerPage
+      ?.locator("#state")
+      .textContent({ timeout: 1000 })
+      .catch(() => null),
+    viewerErrors: viewerErrors
+      .slice(-5)
+      .map((e) => String(e).replace(/\b[a-f0-9]{64}\b/gi, "[redacted]")),
     running: status?.running,
     firstProfile: status?.profiles[0] && {
       state: status.profiles[0].state,

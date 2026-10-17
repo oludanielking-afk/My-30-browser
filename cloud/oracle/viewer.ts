@@ -53,7 +53,11 @@ export function viewer(
       return;
     }
     const origin = req.get("origin");
-    if (origin && origin !== `http${process.env.COOKIE_SECURE === "1" ? "s" : ""}://${req.get("host")}`) {
+    if (
+      origin &&
+      origin !==
+        `http${process.env.COOKIE_SECURE === "1" ? "s" : ""}://${req.get("host")}`
+    ) {
       res.sendStatus(403);
       return;
     }
@@ -71,6 +75,14 @@ export function viewer(
         res.sendStatus(401);
         return;
       }
+      // noVNC decodes framebuffer/cursor pixels as data/blob images. This
+      // permits images only; scripts, frames and outside connections stay blocked.
+      const csp = res.getHeader("Content-Security-Policy");
+      if (csp)
+        res.setHeader(
+          "Content-Security-Policy",
+          String(csp) + "; img-src 'self' data: blob:",
+        );
       next();
     },
     express.static(path.resolve("cloud/oracle/public"), {
